@@ -1,4 +1,4 @@
-package pl.aga;
+package pl.aga.exercise1;
 
 import lombok.Value;
 
