@@ -4,11 +4,12 @@ import org.junit.jupiter.api.Test;
 import pl.aga.exercise1.Dish;
 import pl.aga.exercise1.StreamOperations;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Collectors.*;
 
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.summarizingInt;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class StreamOperationsTest {
@@ -41,23 +42,63 @@ class StreamOperationsTest {
     }
 
     @Test
-    public void should_be_ok() {
-        List<Integer> numbers1 = Arrays.asList(1, 2, 3);
-        List<Integer> numbers2 = Arrays.asList(3, 4);
+    public void should_get_sum_of_calories_from_all_menu() {
+        int result = streamOperations.getSumOfCaloriesFromAllMenu(menu);
 
-        List<int[]> pairs =
-                numbers1.stream()
-                        .flatMap(i -> numbers2.stream()
-                                .filter(j -> (i + j) % 3 == 0)
-                                .map(j -> new int[]{i, j})
-                        )
-                        .collect(Collectors.toList());
-
-        for(int [] i : pairs){
-            System.out.println(Arrays.toString(i));
-            }
-
+        assertThat(result).isEqualTo(4200);
     }
+
+    @Test
+    public void should_get_most_calorie_dish_from_all_menu() {
+        Optional<Dish> result = streamOperations.getMostCalorieDish(menu);
+
+        assertThat(result.get()).isEqualTo(new Dish("pork", false, 800, Dish.Type.MEAT));
+        assertThat(result.get().getCalories()).isEqualTo(800);
+
+        IntSummaryStatistics menuStatistic = menu.stream().collect(summarizingInt(Dish::getCalories));
+        System.out.println(menuStatistic);
+
+        String shortMenu = menu.stream().map(Dish::getName).collect(joining(", "));
+        System.out.println(shortMenu);
+    }
+
+    @Test
+    public void should_get_grouping_menu_by_type_of_dish() {
+        Map<Dish.Type, List<Dish>> result = streamOperations.getGroupingDishByType(menu);
+
+        assertThat(result.size()).isEqualTo(3);
+        assertThat(result.get(Dish.Type.MEAT))
+                .isEqualTo(List.of
+                               (new Dish("pork", false, 800, Dish.Type.MEAT),
+                                new Dish("beef", false, 700, Dish.Type.MEAT),
+                                new Dish("chicken", false, 400, Dish.Type.MEAT)));
+    }
+
+    @Test
+    public void should_get_menu_grouping_by_caloricLevel_of_dish(){
+        Map<Dish.CaloricLevel, List<Dish>> result = streamOperations.getDishesGroupingByCaloricLevel(menu);
+
+        assertThat(result.get(Dish.CaloricLevel.DIET).size()).isEqualTo(4);
+    }
+
+    @Test
+    public void should_counting_Dishes_for_every_type(){
+        Map<Dish.Type, Long> result = streamOperations.getQuantityOfDishesEveryType(menu);
+
+        assertThat(result.get(Dish.Type.MEAT)).isEqualTo(3);
+        assertThat(result.get(Dish.Type.OTHER)).isEqualTo(4);
+        assertThat(result.get(Dish.Type.FISH)).isEqualTo(2);
+    }
+
+    @Test
+    public void should_find_most_caloric_dish_for_every_type(){
+        Map<Dish.Type,Optional<Dish>> result = streamOperations.getMostCaloricDishFromEveryType(menu);
+
+        assertThat(result.get(Dish.Type.MEAT).get()).isEqualTo(new Dish("pork", false, 800, Dish.Type.MEAT));
+        assertThat(result.get(Dish.Type.OTHER).get()).isEqualTo(new Dish("pizza", true, 550, Dish.Type.OTHER));
+        assertThat(result.get(Dish.Type.FISH).get()).isEqualTo(new Dish("salmon", false, 450, Dish.Type.FISH));
+    }
+
 
 
 }
